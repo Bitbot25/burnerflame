@@ -1,8 +1,8 @@
 use bitflags::bitflags;
 use enum_map::{enum_map, Enum};
 
-mod encode;
-mod linux64;
+pub mod encode;
+pub mod linux64;
 mod make_ins;
 mod reg;
 
@@ -275,26 +275,27 @@ pub struct Instruction {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        encode::Encode,
-        linux64::MMapHandle,
-        make_ins::{InstructionWith, InstructionWith1},
-        Instruction, OpCode,
-    };
+    use crate as burnerflame;
+    use burnerflame::encode::Encode;
+    use burnerflame::linux64::MMapHandle;
+    use burnerflame::{Instruction, OpCode};
+    use std::mem;
+
     #[test]
     fn u64_function_returns() {
+        type FuncType = unsafe extern "C" fn() -> u32;
+
         let mov = Instruction::new1(OpCode::Mov_eax_imm32, 32u32);
         let ret = Instruction::new(OpCode::Retn);
-        let instructions = vec![mov, ret];
 
         let mut code = Vec::new();
-        for instruction in instructions {
-            instruction.encode(&mut code);
-        }
+        mov.encode(&mut code);
+        ret.encode(&mut code);
 
-        let exec = MMapHandle::executable(code.as_slice());
-        type FuncType = unsafe extern "C" fn() -> u32;
-        let func = unsafe { std::mem::transmute::<*const u8, FuncType>(exec.raw()) };
-        assert_eq!(unsafe { func() }, 32);
+        let executable_handle = MMapHandle::executable(code.as_slice());
+        unsafe {
+            let func = mem::transmute::<*const u8, FuncType>(executable_handle.raw());
+            assert_eq!(func(), 32u32);
+        }
     }
 }
