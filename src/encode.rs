@@ -1,7 +1,7 @@
 use crate::{
     modrm::{self, ModRM},
-    rex::REX,
-    sib::SIB,
+    rex::Rex,
+    sib::Sib,
     DisplacementByte, Immediate, Instruction,
 };
 
@@ -61,7 +61,7 @@ impl Encode for DisplacementByte {
     }
 }
 
-impl Encode for SIB {
+impl Encode for Sib {
     fn encode(&self, out: &mut Vec<u8>) {
         let (index, _ext) = self.index.encoding();
         let (base, _ext) = self.base.encoding();
@@ -86,7 +86,7 @@ impl Encode for ModRM {
     }
 }
 
-impl Encode for REX {
+impl Encode for Rex {
     fn encode(&self, out: &mut Vec<u8>) {
         let mut rex = 0b01000000;
         rex |= (self.operand_size_is_64bit as u8) << 3;

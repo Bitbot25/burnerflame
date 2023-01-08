@@ -1,11 +1,11 @@
 use crate::{
     modrm::{self, ModRM},
-    rex::REX,
+    rex::Rex,
     Immediate, Instruction, Memory, OpCode, OpCodeFlags, Register, Register32, Register64,
 };
 
 pub trait InstructionWith {
-    fn new(opcode: OpCode) -> Instruction;
+    fn new(opcode: OpCode) -> Self;
 }
 
 pub trait InstructionWith2<A, B> {
@@ -25,9 +25,7 @@ impl InstructionWith for Instruction {
         Instruction {
             opcode,
             modrm: None,
-            rex: opcode
-                .opcode_register_operand()
-                .and_then(|reg| REX::maybe_of(reg)), // SPL registers and such REQUIRE a REX prefix
+            rex: opcode.opcode_register_operand().and_then(Rex::maybe_of), // SPL registers and such REQUIRE a REX prefix
             sib: None,
             displacement: None,
             immediate: None,
@@ -48,7 +46,7 @@ impl InstructionWith2<Memory, Register32> for Instruction {
                 reg: modrm::Reg::Register(opr1.into()),
                 rm: modrm::RM::Register(Register::dangle()),
             }),
-            rex: REX::maybe_of(opr1.into()),
+            rex: Rex::maybe_of(opr1.into()),
             sib: Some(opr0.sib),
             displacement: opr0.displacement,
             immediate: None,
@@ -69,7 +67,7 @@ impl InstructionWith2<Register64, u32> for Instruction {
                 reg: modrm::Reg::OpCodeExtension(opcode.ext()),
                 rm: modrm::RM::Register(opr0.into()),
             }),
-            rex: Some(REX {
+            rex: Some(Rex {
                 operand_size_is_64bit: true,
                 modrm_reg_extension: 0,
                 sib_index_extension: 0,
@@ -95,9 +93,7 @@ impl InstructionWith1<u32> for Instruction {
                     rm: modrm::RM::Register(Register::dangle()),
                 })
             },
-            rex: opcode
-                .opcode_register_operand()
-                .and_then(|reg| REX::maybe_of(reg)), // SPL registers and such REQUIRE a REX prefix
+            rex: opcode.opcode_register_operand().and_then(Rex::maybe_of), // SPL registers and such REQUIRE a REX prefix
             sib: None,
             displacement: None,
             immediate: Some(Immediate::Imm32(opr0)),

@@ -71,7 +71,7 @@ impl Register {
 
 #[derive(Debug)]
 pub struct Memory {
-    pub sib: SIB,
+    pub sib: Sib,
     pub displacement: Option<DisplacementByte>,
 }
 
@@ -137,18 +137,18 @@ mod modrm {
     }
 }
 
-use rex::REX;
+use rex::Rex;
 mod rex {
     use crate::{Register, RegisterExtension, SIBIndexExtension, SingleBitExtension};
 
-    pub struct REX {
+    pub struct Rex {
         pub operand_size_is_64bit: bool,
         pub modrm_reg_extension: RegisterExtension,
         pub sib_index_extension: SIBIndexExtension,
         pub modrm_rm_or_sib_base_extension: SingleBitExtension,
     }
 
-    impl REX {
+    impl Rex {
         pub fn maybe_of(_register: Register) -> Option<Self> {
             // FIXME: Support for other registers
             None
@@ -156,7 +156,7 @@ mod rex {
     }
 }
 
-use sib::SIB;
+use sib::Sib;
 mod sib {
     use super::{u2, Register};
 
@@ -165,7 +165,7 @@ mod sib {
     pub type Base = Register;
 
     #[derive(Debug)]
-    pub struct SIB {
+    pub struct Sib {
         pub scale: Scale,
         pub index: Index,
         pub base: Base,
@@ -266,8 +266,8 @@ pub enum Immediate {
 
 pub struct Instruction {
     pub modrm: Option<ModRM>,
-    pub rex: Option<REX>,
-    pub sib: Option<SIB>,
+    pub rex: Option<Rex>,
+    pub sib: Option<Sib>,
     pub displacement: Option<DisplacementByte>,
     pub opcode: OpCode,
     pub immediate: Option<Immediate>,
@@ -277,7 +277,7 @@ pub struct Instruction {
 mod test {
     use crate::{
         encode::Encode,
-        linux64::*,
+        linux64::MMapHandle,
         make_ins::{InstructionWith, InstructionWith1},
         Instruction, OpCode,
     };
