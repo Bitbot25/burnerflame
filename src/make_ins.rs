@@ -77,7 +77,7 @@ impl InstructionWith2<Register64, u32> for Instruction {
                 operand_size_is_64bit: true,
                 modrm_reg_extension: 0,
                 sib_index_extension: 0,
-                modrm_rm_or_sib_base_extension: Register::from(opr0).ext(),
+                modrm_rm_or_sib_base_extension: Register::from(opr0).ext().unwrap_or(0),
             }),
             sib: None,
             displacement: None,

@@ -1,12 +1,52 @@
 use bitflags::bitflags;
-use enum_map::{enum_map, Enum};
+use enum_map::{enum_map, Enum, EnumMap};
 
 pub mod encode;
 pub mod linux64;
 mod make_ins;
 mod reg;
 
-#[derive(Debug, Clone, Copy)]
+bitflags! {
+    pub struct RegisterFlags: u8 {
+        const IS_64BIT = 0b00000001;
+        const IS_32BIT = 0b00000010;
+        const IS_16BIT = 0b00000100;
+        const IS_8BIT  = 0b00001000;
+    }
+}
+
+struct RegisterData {
+    main_byte: u8,
+    extension: Option<RegisterExtension>,
+    flags: RegisterFlags,
+}
+
+fn register_data_map() -> EnumMap<Register, RegisterData> {
+    // TODO: Change into lazy constant
+    enum_map! {
+        Register::AL => RegisterData { main_byte: 0, extension: None, flags: RegisterFlags::IS_8BIT },
+        Register::CL => RegisterData { main_byte: 1, extension: None, flags: RegisterFlags::IS_8BIT },
+        Register::DL => RegisterData { main_byte: 2, extension: None, flags: RegisterFlags::IS_8BIT },
+        Register::BL => RegisterData { main_byte: 3, extension: None, flags: RegisterFlags::IS_8BIT },
+
+        Register::AX => RegisterData { main_byte: 0, extension: None, flags: RegisterFlags::IS_16BIT },
+        Register::CX => RegisterData { main_byte: 1, extension: None, flags: RegisterFlags::IS_16BIT },
+        Register::DX => RegisterData { main_byte: 2, extension: None, flags: RegisterFlags::IS_16BIT },
+        Register::BX => RegisterData { main_byte: 3, extension: None, flags: RegisterFlags::IS_16BIT },
+
+        Register::EAX => RegisterData { main_byte: 0, extension: None, flags: RegisterFlags::IS_32BIT },
+        Register::ECX => RegisterData { main_byte: 1, extension: None, flags: RegisterFlags::IS_32BIT },
+        Register::EDX => RegisterData { main_byte: 2, extension: None, flags: RegisterFlags::IS_32BIT },
+        Register::EBX => RegisterData { main_byte: 3, extension: None, flags: RegisterFlags::IS_32BIT },
+
+        Register::RAX => RegisterData { main_byte: 0, extension: None, flags: RegisterFlags::IS_64BIT },
+        Register::RCX => RegisterData { main_byte: 1, extension: None, flags: RegisterFlags::IS_64BIT },
+        Register::RDX => RegisterData { main_byte: 2, extension: None, flags: RegisterFlags::IS_64BIT },
+        Register::RBX => RegisterData { main_byte: 3, extension: None, flags: RegisterFlags::IS_64BIT },
+    }
+}
+
+#[derive(Debug, Clone, Copy, Enum)]
 #[repr(u8)]
 pub enum Register {
     AL,
@@ -31,35 +71,40 @@ pub enum Register {
 }
 
 impl Register {
-    pub fn encoding(&self) -> (u8, RegisterExtension) {
-        // TODO: enum_map
-        match self {
-            Self::AL | Self::AX | Self::EAX | Self::RAX => (0, RegisterExtension::min_value()),
-            Self::CL | Self::CX | Self::ECX | Self::RCX => (1, RegisterExtension::min_value()),
-            Self::DL | Self::DX | Self::EDX | Self::RDX => (2, RegisterExtension::min_value()),
-            Self::BL | Self::BX | Self::EBX | Self::RBX => (3, RegisterExtension::min_value()),
-        }
+    pub fn encoding(&self) -> (u8, Option<RegisterExtension>) {
+        let RegisterData {
+            main_byte,
+            extension,
+            ..
+        } = register_data_map()[*self];
+        (main_byte, extension)
     }
 
     pub fn is_64bit(&self) -> bool {
-        match self {
-            Self::AL
-            | Self::AX
-            | Self::CL
-            | Self::CX
-            | Self::DL
-            | Self::DX
-            | Self::BL
-            | Self::BX
-            | Self::EAX
-            | Self::ECX
-            | Self::EDX
-            | Self::EBX => false,
-            Self::RAX | Self::RCX | Self::RDX | Self::RBX => true,
-        }
+        register_data_map()[*self]
+            .flags
+            .intersects(RegisterFlags::IS_64BIT)
     }
 
-    pub fn ext(&self) -> RegisterExtension {
+    pub fn is_32bit(&self) -> bool {
+        register_data_map()[*self]
+            .flags
+            .intersects(RegisterFlags::IS_32BIT)
+    }
+
+    pub fn is_16bit(&self) -> bool {
+        register_data_map()[*self]
+            .flags
+            .intersects(RegisterFlags::IS_16BIT)
+    }
+
+    pub fn is_8bit(&self) -> bool {
+        register_data_map()[*self]
+            .flags
+            .intersects(RegisterFlags::IS_8BIT)
+    }
+
+    pub fn ext(&self) -> Option<RegisterExtension> {
         let (_enc, ext) = self.encoding();
         ext
     }
@@ -76,6 +121,8 @@ pub struct Memory {
 }
 
 #[derive(Clone, Copy)]
+pub struct Register8(Register);
+#[derive(Clone, Copy)]
 pub struct Register16(Register);
 #[derive(Clone, Copy)]
 pub struct Register32(Register);
@@ -87,7 +134,37 @@ impl Register64 {
         if reg.is_64bit() {
             Register64(reg)
         } else {
-            panic!("Cannot wrap non-64bit register in Register64")
+            panic!("Cannot wrap non 64-bit register in Register64")
+        }
+    }
+}
+
+impl Register32 {
+    pub fn new(reg: Register) -> Self {
+        if reg.is_32bit() {
+            Register32(reg)
+        } else {
+            panic!("Cannot wrap non 32-bit register in Register32")
+        }
+    }
+}
+
+impl Register16 {
+    pub fn new(reg: Register) -> Self {
+        if reg.is_16bit() {
+            Register16(reg)
+        } else {
+            panic!("Cannot wrap non 16-bit register in Register16")
+        }
+    }
+}
+
+impl Register8 {
+    pub fn new(reg: Register) -> Self {
+        if reg.is_8bit() {
+            Register8(reg)
+        } else {
+            panic!("Cannot wrap non 8-bit register in Register8")
         }
     }
 }

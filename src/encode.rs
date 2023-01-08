@@ -78,7 +78,7 @@ impl Encode for ModRM {
         }
         .encoding();
         let (reg, _ext) = match self.reg {
-            modrm::Reg::OpCodeExtension(_op) => (0, 0),
+            modrm::Reg::OpCodeExtension(_op) => (0, None),
             modrm::Reg::Register(reg) => reg.encoding(),
         };
         let modrm = self.mod_ as u8 | (reg << 3) | rm;
