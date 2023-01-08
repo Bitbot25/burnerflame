@@ -3,7 +3,7 @@ use enum_map::{enum_map, Enum};
 
 mod encode;
 mod linux64;
-mod make_lli;
+mod make_ins;
 mod reg;
 
 #[derive(Debug, Clone, Copy)]
@@ -278,7 +278,7 @@ mod test {
     use crate::{
         encode::Encode,
         linux64::*,
-        make_lli::{InstructionWith, InstructionWith1},
+        make_ins::{InstructionWith, InstructionWith1},
         Instruction, OpCode,
     };
     #[test]
