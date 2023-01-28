@@ -101,7 +101,7 @@ impl AssmMov<Register, u64> for Assembler {
 
 impl AssmMov<Register32, u32> for Assembler {
     fn mov(&mut self, dest: Register32, val: u32) {
-        Instruction::new2(OpCode::Mov_r32m32_imm32, dest, val).encode(&mut self.buf)
+        Instruction::new1(OpCode::Mov_r32_imm32(dest), val).encode(&mut self.buf)
     }
 }
 
