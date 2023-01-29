@@ -53,7 +53,7 @@ fn register_data_map() -> EnumMap<Register, RegisterData> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Enum)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Enum)]
 #[repr(u8)]
 pub enum Register {
     AL,
