@@ -53,7 +53,7 @@ fn register_data_map() -> EnumMap<Register, RegisterData> {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy, Enum)]
+#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy, Enum)]
 #[repr(u8)]
 pub enum Register {
     AL,
@@ -127,13 +127,13 @@ pub struct Memory {
     pub displacement: Option<DisplacementByte>,
 }
 
-#[derive(Enum, Debug, Clone, Copy)]
+#[derive(Hash, Enum, Debug, Clone, Copy)]
 pub struct Register8(Register);
-#[derive(Enum, Debug, Clone, Copy)]
+#[derive(Hash, Enum, Debug, Clone, Copy)]
 pub struct Register16(Register);
-#[derive(Enum, Debug, Clone, Copy)]
+#[derive(Hash, Enum, Debug, Clone, Copy)]
 pub struct Register32(Register);
-#[derive(Enum, Debug, Clone, Copy)]
+#[derive(Hash, Enum, Debug, Clone, Copy)]
 pub struct Register64(Register);
 
 impl Register64 {
